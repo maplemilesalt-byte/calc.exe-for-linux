@@ -1,18 +1,54 @@
-/****************************Module*Header***********************************\
-* Module Name: SCICALC.H
-*
-* Module Descripton: Main header file
-*
-* Warnings:
-*
-* Created:
-*
-* Author:
-\****************************************************************************/
+#ifndef SCICALC_H
+#define SCICALC_H
 
 #define CALC_COMPILE
 
-/* To keep a buncha junk outa compiles */
+#ifdef CALC_LINUX
+#include "linux/platform.h"
+#include <stdint.h>
+#include <stddef.h>
+#include "scimath.h"
+#include "resource.h"
+#include "wassert.h"
+
+typedef int32_t LONG;
+typedef uint32_t DWORD;
+typedef uint32_t UINT;
+typedef int32_t INT;
+typedef uintptr_t ULONG_PTR;
+typedef uintptr_t WPARAM;
+typedef intptr_t LPARAM;
+typedef intptr_t LRESULT;
+typedef void *HINSTANCE;
+typedef void *HWND;
+typedef char TCHAR;
+typedef char *LPTSTR;
+typedef const char *LPCTSTR;
+typedef unsigned short WORD;
+typedef int BOOL;
+#ifndef TRUE
+#define TRUE 1
+#define FALSE 0
+#endif
+#ifndef APIENTRY
+#define APIENTRY
+#endif
+#ifndef WINAPI
+#define WINAPI
+#endif
+#ifndef CALLBACK
+#define CALLBACK
+#endif
+#ifndef VOID
+#define VOID void
+#endif
+#ifndef NEAR
+#define NEAR
+#endif
+#ifndef TEXT
+#define TEXT(x) x
+#endif
+#else
 #define NOGDICAPMASKS
 #define NOSYSMETRICS
 #define NODRAWFRAME
@@ -25,110 +61,75 @@
 #define NOWH
 #define NOCOMM
 #define NOKANJI
-
 #include <windows.h>
 #include <windowsx.h>
 #include "scimath.h"
 #include "resource.h"
-#include "wassert.h"    // our own simple little assert
+#include "wassert.h"
 #include <htmlhelp.h>
-
-#define CSTRMAX        256   /* Maximum length of any one string.         */
-#ifdef DEBUG
-#define CCHSTRINGSMAX  3
-#else
-#define CCHSTRINGSMAX  1024  /* Initial bytes to allocate for strings.    */
 #endif
 
-#define CMS_CALC_TIMEOUT     (10 * 1000) // initial timeout == 10 secs
-#define CMS_MAX_TIMEOUT      (40 * 1000) // Max timeout == 40 secs
+#define CSTRMAX 256
+#ifdef DEBUG
+#define CCHSTRINGSMAX 3
+#else
+#define CCHSTRINGSMAX 1024
+#endif
 
+#define CMS_CALC_TIMEOUT (10 * 1000)
+#define CMS_MAX_TIMEOUT (40 * 1000)
 #define xwParam(x,y) ((wParam >=x) && (wParam <=y))
+#define RSHF 7
 
-#define RSHF        7
-
-/* Error values.                                                          */
-#define SCERR_DIVIDEZERO    0
-#define SCERR_DOMAIN        1
-#define SCERR_UNDEFINED     2
-#define SCERR_POS_INFINITY  3
-#define SCERR_NEG_INFINITY  4
-#define SCERR_ABORTED       5
-
-
-/* F_INTMATH()  returns TRUE if math should be intiger mode               */
-//
-// Do int math if we are not in base ten
-//
+#define SCERR_DIVIDEZERO 0
+#define SCERR_DOMAIN 1
+#define SCERR_UNDEFINED 2
+#define SCERR_POS_INFINITY 3
+#define SCERR_NEG_INFINITY 4
+#define SCERR_ABORTED 5
 #define F_INTMATH() (nRadix != 10)
 
-////////////////////////////////////////////////////////////////////////////
-//
-// Function prototypes.
-//
-////////////////////////////////////////////////////////////////////////////
-
-/* Exports.                                                               */
+#ifndef CALC_LINUX
 LRESULT APIENTRY CalcWndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR APIENTRY StatBoxProc(HWND, UINT, WPARAM, LPARAM);
-
-/* Functions called from several modules.  Must be FAR.                   */
-VOID    APIENTRY DisplayError (INT);
-VOID    APIENTRY EnableToggles(BOOL bEnable);
-VOID    APIENTRY InitSciCalc (BOOL);
-VOID    APIENTRY MenuFunctions(DWORD);
-VOID    APIENTRY SciCalcFunctions (PHNUMOBJ phnoNum, DWORD wOp);
-VOID    APIENTRY SetStat (BOOL);
-VOID    APIENTRY StatFunctions (WPARAM);
-
-VOID   DisplayNum (VOID);
-
-/* Internal near calls.                                                   */
-void        DoOperation (INT   nOperation, HNUMOBJ *phnoNum, HNUMOBJ hnoX);
-
-VOID   NEAR ProcessCommands(WPARAM);
-VOID   NEAR SetBox (int, BOOL);
-VOID   NEAR SetRadix (DWORD);
-LONG   NEAR StatAlloc (WORD, DWORD);
-VOID   NEAR StatError (VOID);
-
-void   SwitchModes(DWORD wRadix, int nDecMode, int nHexMode);
+VOID APIENTRY DisplayError(INT);
+VOID APIENTRY EnableToggles(BOOL bEnable);
+VOID APIENTRY InitSciCalc(BOOL);
+VOID APIENTRY MenuFunctions(DWORD);
+VOID APIENTRY SciCalcFunctions(PHNUMOBJ phnoNum, DWORD wOp);
+VOID APIENTRY SetStat(BOOL);
+VOID APIENTRY StatFunctions(WPARAM);
+VOID DisplayNum(VOID);
+void DoOperation(INT nOperation, HNUMOBJ *phnoNum, HNUMOBJ hnoX);
+VOID NEAR ProcessCommands(WPARAM);
+VOID NEAR SetBox(int, BOOL);
+VOID NEAR SetRadix(DWORD);
+LONG NEAR StatAlloc(WORD, DWORD);
+VOID NEAR StatError(VOID);
+void SwitchModes(DWORD wRadix, int nDecMode, int nHexMode);
+BOOL SetWaitCursor(BOOL fOn);
+BOOL SetDisplayText(HWND, LPCTSTR);
+COLORREF GetKeyColor(int iID);
+ULONG_PTR GetHelpID(int iID);
+#endif
 
 void RecalcNumObjConstants(void);
-BOOL SetWaitCursor( BOOL fOn );
+void KillTimeCalc(void);
+void TimeCalc(BOOL fStart);
 
-void KillTimeCalc( void );
-void TimeCalc( BOOL fStart );
-BOOL SetDisplayText(HWND, LPCTSTR);
+#define INDEXFROMID(x) ((x)-IDC_FIRSTCONTROL)
 
-// these functions are from SciKeys.c and are used to access data stored 
-// in the key array
-COLORREF   GetKeyColor( int iID );
-ULONG_PTR  GetHelpID( int iID );
-
-#define  INDEXFROMID( x )    (x-IDC_FIRSTCONTROL)
-
-
-////////////////////////////////////////////////////////////////////////////
-//
-// Global Variables
-//
-////////////////////////////////////////////////////////////////////////////
-
-extern HWND         g_hwndDlg;
-extern HINSTANCE    hInst;
-extern ANGLE_TYPE   nDecMode;
-
+extern HWND g_hwndDlg;
+extern HINSTANCE hInst;
+extern ANGLE_TYPE nDecMode;
 extern long nRadix;
 extern long nPrecision;
 extern long dwWordBitWidth;
+extern BOOL bInv;
+extern BOOL bHyp;
+extern int nCalc;
+extern int nHexMode;
+extern HNUMOBJ g_ahnoChopNumbers[];
+extern BOOL bFarEast;
 
-extern BOOL     bInv;
-extern BOOL     bHyp;
-
-extern int      nCalc;
-extern int      nHexMode;
-
-extern HNUMOBJ  g_ahnoChopNumbers[];
-
-extern BOOL     bFarEast;
+#endif /* SCICALC_H */
